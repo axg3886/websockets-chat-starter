@@ -59,41 +59,34 @@ const onMsg = (sock) => {
     // Custom /time command
     if (data.msg.startsWith('/time')) {
       sendMessage(socket, user.channel, `Time: ${new Date()}`);
-    }
-    // Custom /roll <NdX> command
-    else if(data.msg.startsWith('/roll')) {
+    } else if (data.msg.startsWith('/roll')) { // Custom /roll <NdX> command
       // Split on spaces
       const split = data.msg.split(' ');
       // If we have an argument
-      if(split.length > 1) {
+      if (split.length > 1) {
         // Split the first arg on 'd' (syntax NdX)
         const vals = split[1].split('d');
-        if(vals.length > 1) {
+        if (vals.length > 1) {
           // Get the number of dice to roll
-          const num = Math.max(parseInt(vals[0]), 1);
+          const num = Math.max(parseInt(vals[0], 10), 1);
           // Get the number of sides to roll
-          const die = Math.max(parseInt(vals[1]), 1);
+          const die = Math.max(parseInt(vals[1], 10), 1);
           // Counter var
           let r = 0;
           // Roll the dice
-          for (let i = 0; i < num; i++)
-            r += Math.floor(Math.random() * die) + 1;
+          for (let i = 0; i < num; i++) { r += Math.floor(Math.random() * die) + 1; }
           // Build the message
           const msg = `${user.name} rolled ${r} from ${split[1]}`;
           // Send the message
           sendToChannel(user.channel, msg, 'server');
         }
       }
-    }
-    // Custom /help command
-    else if(data.msg.startsWith('/help')) {
-      const msg = "Commands:\n" +
-        "/time: Sends the server time.\n" +
-        "/roll <NdX>: Rolls N dice of X sides.";
+    } else if (data.msg.startsWith('/help')) { // Custom /help command
+      const msg = 'Commands:\n' +
+        '/time: Sends the server time.\n' +
+        '/roll <NdX>: Rolls N dice of X sides.';
       sendMessage(socket, user.channel, msg);
-    }
-    // Otherwise it's a standard message
-    else {
+    } else { // Otherwise it's a standard message
       sendToChannel(user.channel, data.msg, user.name);
     }
   });
