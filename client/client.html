@@ -1,22 +1,83 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- import the websocket client library. You can code websockets from scratch
-         but we will just import a library. In this case we are using socket.io which is 
-         one of the most popular and feature rich websocket libraries.
-         
-         You can point the src for the script to any host online, but
-         by default the socket.io nodejs library will host the client library
-         online at your node.js address under /socket.io/socket.io.js 
-         You can disable that on the server if desired
-    -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
+	<script src="/socket.io/socket.io.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
 	<style>
 		textarea {
 			display: block;
 			background-color: #EEEEEE;
 		}
 	</style>
+	<script type="text/babel">
+		"use strict";
+
+		const username = document.querySelector("#username");
+		const connect = document.querySelector("#connect");
+		const message = document.querySelector("#message");
+		const chat = document.querySelector("#chat");
+		const send = document.querySelector("#send");
+		const channels = document.querySelector("#channels");
+		const change = document.querySelector("#change");
+		const userlist = document.querySelector("#userlist");
+
+		const connectSocket = (e) => {
+			const socket = io.connect();
+
+			socket.on('connect', () => {
+				let user = username.value || 'unknown';
+				socket.emit('join', { name: user });
+				message.disabled = false;
+				send.disabled = false;
+				username.disabled = true;
+				connect.disabled = true;
+			});
+
+			socket.on('msg', (data) => {
+				chat.value += `[#${data.channel}] ${data.user}: ${data.msg}\n`;
+			});
+
+			socket.on('channelList', (data) => {
+				channels.disabled = false;
+				change.disabled = false;
+				channels.innerHTML = "";
+
+				for(let i = 0; i < data.length; i++) {
+					channels.innerHTML += `<option value=${data[i]}>${data[i]}</option>`;
+				}
+				socket.emit('channelChange', { startup: true });
+			});
+
+			socket.on('userList', (data) => {
+				userlist.value = "";
+				for(let i = 0; i < data.length; i++) {
+					userlist.value += data[i] + "\n";
+				}
+			});
+
+			send.addEventListener('click', () => {
+				socket.emit('msgToServer', {channel: 'general', msg: message.value });
+				message.value = "";
+			});
+
+			message.addEventListener('keyup', (data) => {
+				if(data.key === 'Enter')
+					send.click();
+			});
+
+			change.addEventListener('click', () => socket.emit('channelChange', {channel: channels.value }));
+		};
+
+		const init = () => {
+			username.addEventListener('keyup', (data) => {
+				if(data.key === 'Enter')
+					connect.click();
+			});
+			connect.addEventListener('click', connectSocket);
+		};
+
+		window.onload = init;
+	</script>
 </head>
 <body>
 	<label for="user">Username:</label>
@@ -24,9 +85,16 @@
 	<input id="connect" type='button' value='connect'/>
 	<br/>
 	<label for="message">Message:</label>
-	<input id="message" name="message" type="text"/>
-	<input id="send" type="button" value="send" />
-	
-	<textarea id="chat" rows="20" cols="40" readonly> </textarea>
+	<input id="message" name="message" type="text" disabled/>
+	<input id="send" type="button" value="send" disabled/>
+	<br/>
+	<label for="channels">Channels:</label>
+	<select id="channels" disabled></select>
+	<input id="change" type="button" value="Change" disabled/>
+	<br/>
+	<textarea id="chat" rows="20" cols="100" readonly></textarea>
+	<p> Try the <code>/help</code> command!</p>
+	<label for="userlist">User List:</label>
+	<textarea id="userlist" rows="10" cols="20" readonly></textarea>
 </body>
 </html>

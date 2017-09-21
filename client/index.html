@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
+    <script type="text/babel">
+      "use strict";
+
+      let socket;
+      let contentElem;
+      let messageElem;
+      let sendBtnElem;
+
+      const init = () => {
+        contentElem = document.querySelector("#content");
+        messageElem = document.querySelector("#message");
+        sendBtnElem = document.querySelector("#sendBtn");
+
+        socket = io.connect();
+
+        socket.on('connect', () => {
+          console.log("Connected.");
+        });
+
+        socket.on('update', (data) => {
+          contentElem.innerHTML += `<p>[#${data.channel}] ${data.msg}`;
+        });
+
+        sendBtnElem.onclick = () => {
+          socket.emit('textMsg', {channel: 'general', msg: messageElem.value});
+          messageElem.value = "";
+        };
+
+        messageElem.onkeyup = (data) => {
+          if(data.key === 'Enter')
+            sendBtnElem.click();
+        };
+      };
+
+      window.onload = init;
+    </script>
+  </head>
+  <body>
+    <div id="content" style="background-color:#afafaf;"></div>
+    <div id="user">
+      <input type="text" id="message" />
+      <button id="sendBtn">Send</button>
+    </div>
+  </body>
+</html>
