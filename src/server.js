@@ -128,9 +128,6 @@ const onChannelChange = (sock) => {
       socket.join(data.channel);
       user.channel = data.channel;
       channels[user.channel].push(user.name);
-      // Update user lists
-      socket.emit('userList', channels[user.channel]);
-      io.sockets.in(user.channel).emit('userList', channels[user.channel]);
     }
 
     // Inform users
@@ -138,6 +135,10 @@ const onChannelChange = (sock) => {
     sendMessage(socket, user.channel, `There are ${numUsers} users in ${user.channel}.`);
     sendMessage(socket, user.channel, `You joined the channel ${user.channel}.`);
     sendBroadcast(socket, user.channel, `${user.name} has joined the channel.`);
+
+    // Update user lists
+    socket.emit('userList', channels[user.channel]);
+    io.sockets.in(user.channel).emit('userList', channels[user.channel]);
   });
 };
 
